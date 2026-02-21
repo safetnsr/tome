@@ -1,454 +1,230 @@
 # lair
 
-**A personal workspace viewer for local files.** Point lair at any directory and get a clean, configurable web UI — with real-time updates, markdown rendering, and powerful per-directory `.view.toml` configuration.
+**Turn any folder into a browsable workspace.** Built for [OpenClaw](https://openclaw.com) agent workspaces.
 
-![lair overview](screenshots/features-overview.png)
-
----
-
-## What is lair?
-
-lair serves your local files as a read/write wiki-style interface. It's built for personal knowledge bases, project workspaces, and agentic memory systems. Every directory can have its own `.view.toml` to control layout, appearance, and behavior.
+![lair zero config](screenshots/01-zero-config.png)
 
 ---
+
+## Why lair?
+
+- **See your agent's workspace** — markdown rendered, files browsable, real-time updates
+- **Zero config start** — point it at a directory, get a clean UI instantly
+- **Progressive config** — add a `.view.toml` to any folder to control layout, pins, embeds, and more
+- **Built for agents** — designed around how OpenClaw agents organize memory, tools, and config
 
 ## Quick start
 
 ```bash
-# Install
-bun install
-
-# Build
-bun run build
-
-# Run (point at any directory)
-bun run start ~/workspace
-bun run start /var/www/myproject
-bun run start .       # current directory
+npx lair ~/workspace
 ```
 
-Then open `http://localhost:3333` in your browser.
+Open `http://localhost:3333`. That's it.
 
----
+## Zero config
 
-## `.view.toml` — configuration reference
+With no `.view.toml`, lair gives you:
 
-Each directory can have a `.view.toml` file that controls how lair renders it. All fields are optional.
+- File tree sidebar with collapsible folders
+- Markdown rendering for `.md` files
+- File size and modification timestamps
+- Light/dark/system theme toggle
+- Real-time updates when files change
 
-### `[display]` — layout and sorting
+![zero config view](screenshots/01-zero-config.png)
 
-```toml
-[display]
-layout = "list"        # list | cards | grid | table | timeline
-sort = "name"          # name | modified | created | size | type
-order = "asc"          # asc | desc
-columns = 3            # for cards/grid layouts
-showMeta = true        # show file size + modified date
-showPreview = false    # show first lines of markdown files
-previewLines = 3       # how many lines to preview
-groupBy = "none"       # type | ext | tag | none
-emptyMessage = "nothing here yet"
-maxDepth = 5           # max recursion depth for sidebar
-showCount = true       # show child count on directories
-hidden = ["drafts", "*.tmp"]  # hide by name or glob
-pinned = ["README.md"]        # pin specific files to top (legacy)
-```
+## Your first `.view.toml`
 
-### `[header]` — directory header
+Drop a `.view.toml` in any directory to customize it. Start simple:
 
 ```toml
 [header]
-title = "My Workspace"
-description = "A brief description shown below the title"
-icon = "🦇"
-banner = "banner.png"  # image path relative to directory
+title = "Agent Workspace"
+description = "Memory, tools, and config for the OpenClaw agent"
+icon = "🧠"
 ```
 
-### `[theme]` — visual overrides
+![header config](screenshots/02-header.png)
+
+Each directory can have its own `.view.toml` — nest configs however you want.
+
+## Layouts
+
+### Cards
 
 ```toml
-[theme]
-accent = "#10b981"     # hex color for accent elements
-bg = "#0a0a0a"         # background color override
-font = "JetBrains Mono"
-borderRadius = "12px"
-compact = true         # tighter spacing
+[display]
+layout = "cards"
+columns = 2
 ```
 
-### `[nav]` — sidebar behavior
+![cards layout](screenshots/03-cards.png)
+
+### Grid
 
 ```toml
-[nav]
-expanded = true        # start expanded in sidebar
-hidden = false         # hide from sidebar entirely
-label = "My Docs"      # override name in sidebar
-icon = "📚"
-separator = "before"   # before | after | both
-position = 1           # manual sidebar ordering
+[display]
+layout = "grid"
+columns = 3
 ```
 
-### `[pages]` — per-file metadata
+![grid layout](screenshots/04-grid.png)
+
+### List
 
 ```toml
-[pages."README.md"]
-title = "About this project"
-description = "What this directory contains"
-badge = "core"
-color = "#10b981"
-icon = "🏠"
-order = 1
-style = "hero"         # highlight | compact | full | raw | hero | aside
-tags = ["docs", "pinned"]
-
-[pages."archive/"]
-badge = "old"
-color = "#6b7280"
+[display]
+layout = "list"
+sort = "modified"
+order = "desc"
 ```
 
----
+![list layout](screenshots/05-list.png)
 
-## New features (v2)
+## Pin
 
-### 1. `[pin]` — pin files to top
-
-Pin specific files so they always appear at the top of directory listings, visually separated from the rest.
+Pin important files to the top. They get a visual separator from the rest.
 
 ```toml
 [pin]
 files = ["NOW.md", "SOUL.md"]
 ```
 
-![Pin feature](screenshots/feature-pin.png)
+![pinned files](screenshots/06-pin.png)
 
-**How it works:**
-- Pinned files are moved to the top of the listing, regardless of sort order
-- They get a subtle pin (📌) indicator icon
-- A visual separator divides pinned items from the rest
-- Works in all layouts: list, cards, grid, table
-- In cards layout, pinned files get their own "PINNED" section with a heading
+## Filter
 
-**Example:** If you have a `NOW.md` (what you're working on) and a `SOUL.md` (principles/context), pin them so they're always immediately visible when you open the directory.
-
----
-
-### 2. `[filter]` — hide/show patterns
-
-Control exactly which files appear in directory listings and the sidebar.
+Control which files appear in a directory listing.
 
 ```toml
 [filter]
-hide = ["_about.md", ".credentials", "archive", "drafts"]
-only = [".md"]
+hide = ["*.log", "draft/"]     # hide by name, extension, or glob
+only = [".md", ".toml"]        # only show these extensions (directories always show)
 ```
 
-**Options:**
+Patterns: `*.md` or `.md` for extensions, `drafts/` for directories, `SECRET.md` for exact names.
+
+## Status
+
+Show freshness badges based on file modification time.
+
+```toml
+[status]
+fresh = "24h"    # modified within 24 hours → green "fresh" badge
+stale = "7d"     # not modified for 7+ days → gray "stale" badge
+```
+
+![status badges](screenshots/07-status.png)
+
+Duration format: `24h`, `7d`, `2w`, `1m` (hours, days, weeks, months).
+
+## Embed
+
+Inline file content directly in the directory listing.
+
+```toml
+[embed]
+files = ["NOW.md"]
+maxLines = 8           # truncate after N lines
+collapsed = false      # start collapsed (click to expand)
+```
+
+![embedded content](screenshots/08-embed.png)
+
+## Links
+
+Add external links to any directory listing.
+
+```toml
+[[links]]
+title = "GitHub"
+url = "https://github.com/safetnsr"
+icon = "🐙"
+
+[[links]]
+title = "API Docs"
+url = "https://api.comrade.md/docs"
+icon = "📖"
+```
+
+![links section](screenshots/09-links.png)
+
+## Per-file styling
+
+Use `[pages]` to add badges, colors, tags, and descriptions to individual files:
+
+```toml
+[pages."NOW.md"]
+badge = "active"
+color = "#22c55e"
+description = "Current priorities and blockers"
+tags = ["priority", "daily"]
+
+[pages."SOUL.md"]
+badge = "core"
+color = "#8b5cf6"
+
+[pages."memory/"]
+description = "Knowledge base and daily notes"
+```
+
+![per-file styling](screenshots/10-pages.png)
+
+### Page options
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `hide` | `string[]` | Patterns to exclude from listing |
-| `only` | `string[]` | If set, only show files matching these extensions |
+| `title` | string | Override display name |
+| `icon` | string | Emoji or icon |
+| `description` | string | Shown next to filename (list) or below (cards) |
+| `badge` | string | Small label badge |
+| `color` | string | Left border color (hex) |
+| `tags` | string[] | Tag badges (cards layout) |
+| `order` | number | Manual sort order |
+| `pinned` | boolean | Pin this file to top |
+| `hidden` | boolean | Hide from listing |
+| `style` | string | `"highlight"`, `"hero"`, `"compact"`, `"full"`, `"raw"`, `"aside"` |
+| `collapsed` | boolean | Start directory collapsed in sidebar |
+| `cover` | string | Image path for cards layout |
+| `redirect` | string | Redirect to another path |
 
-**Pattern matching:**
-- `.md` — match any file with `.md` extension
-- `*.log` — glob: match any file ending in `.log`
-- `archive` — exact name match (directory or file)
-- `archive/` — explicit directory match
+## Full `.view.toml` reference
 
-**Notes:**
-- Directories always pass the `only` filter (so you can still navigate subdirectories)
-- `hide` takes precedence over `only`
-- Filtered files disappear from both the main listing **and** the sidebar
-- The built-in hidden patterns (dotfiles, `node_modules`, `dist`) apply on top
-
-**Example:** In a workspace with code, notes, and private files:
-```toml
-[filter]
-hide = ["_private", "node_modules", "dist"]
-only = [".md"]  # only show markdown in the listing
-```
-
----
-
-### 3. `[links]` — external references
-
-Add external links as a dedicated section in the directory listing. Links render as clickable items that open in a new tab.
-
-```toml
-[[links]]
-title = "comrade dashboard"
-url = "https://comrade.md"
-icon = "📊"
-
-[[links]]
-title = "github"
-url = "https://github.com/safetnsr/lair"
-icon = "🔗"
-
-[[links]]
-title = "documentation"
-url = "https://github.com/safetnsr/lair#readme"
-icon = "📖"
-```
-
-![Links feature](screenshots/feature-links.png)
-
-**Options per link:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | `string` | ✅ | Display name for the link |
-| `url` | `string` | ✅ | URL to open (in new tab) |
-| `icon` | `string` | — | Emoji or character to display |
-
-**Layout behavior:**
-- In **list layout**: links appear as a "LINKS" section below the file list, styled distinctly from files
-- In **cards/grid layout**: links render as dashed-border cards in their own grid section
-- Links always open in a new tab (`target="_blank"`)
-- If no icon is provided, an external link icon is shown instead
-
----
-
-### 4. `[status]` — freshness indicators
-
-Automatically badge files based on how recently they were modified.
-
-```toml
-[status]
-fresh = "24h"   # files modified within 24h get a green "fresh" badge
-stale = "7d"    # files not modified in 7+ days get a dim "stale" badge
-```
-
-![Status badges](screenshots/feature-status.png)
-
-**Duration format:**
-| Suffix | Meaning |
-|--------|---------|
-| `h` | hours |
-| `d` | days |
-| `w` | weeks |
-| `m` | months (30d) |
-
-**Examples:** `"1h"`, `"24h"`, `"3d"`, `"7d"`, `"2w"`, `"30d"`
-
-**Behavior:**
-- `fresh` badge: green pill, appears on files modified within the specified duration
-- `stale` badge: dim gray pill, appears on files not modified since the duration
-- Both can be set simultaneously — `fresh` takes precedence if both would match
-- Only applies to files, not directories
-- Badges appear next to the filename in all layouts (list, cards, grid)
-
-**Use cases:**
-- Track "active" notes vs. abandoned ones
-- Highlight recently updated docs in a knowledge base
-- Surface stale tasks that need attention
-
----
-
-### 5. `[embed]` — inline file preview
-
-Render file contents directly inline in the directory listing, without needing to click into the file.
-
-```toml
-[embed]
-files = ["NOW.md", "CONTEXT.md"]
-maxLines = 10
-collapsed = false
-```
-
-![Embed feature](screenshots/feature-embed.png)
-
-**Options:**
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `files` | `string[]` | — | List of filenames to embed |
-| `maxLines` | `number` | — | Truncate after N HTML lines (shows truncation notice) |
-| `collapsed` | `boolean` | `false` | If true, shows as collapsible section (closed by default) |
-
-**Behavior:**
-- Embedded files render their full markdown HTML inline in the listing
-- The file still appears as a normal item in its position (pinned if also in `[pin]`)
-- `maxLines`: truncate the rendered HTML after N lines, with an italic "truncated to N lines" notice at the bottom
-- `collapsed = true`: shows a "preview" toggle button; content is hidden until expanded
-- Clicking the embedded content area does not navigate — only clicking the file name/button does
-
-**Cards layout:** Embed previews render as a bordered preview section inside the card.
-
-**Example use case:**
-```toml
-[pin]
-files = ["NOW.md"]
-
-[embed]
-files = ["NOW.md"]
-maxLines = 15
-collapsed = false
-```
-This pins `NOW.md` to the top and shows its content inline — perfect for a "current status" that's always visible on the workspace landing page.
-
----
-
-## Cards layout with all features
-
-![Cards layout](screenshots/feature-cards.png)
-
-In cards layout, all 5 features work together:
-- Pinned files get a dedicated "PINNED" section at the top
-- Status badges (fresh/stale) appear on each card
-- Embedded content renders inside the card body
-- Links appear as dashed-border cards in a "LINKS" grid section
-- Filtered files are hidden completely
-
----
-
-## Full demo `.view.toml`
-
-This is the config used in the screenshot above — showcasing all 5 features:
-
-```toml
-[header]
-title = "🦇 The Lair"
-description = "A demo workspace showcasing all lair .view.toml features"
-icon = "🦇"
-
-[display]
-layout = "list"
-showMeta = true
-
-[pin]
-files = ["NOW.md", "SOUL.md"]
-
-[filter]
-hide = ["_private.md", "drafts"]
-only = [".md"]
-
-[status]
-stale = "7d"
-fresh = "24h"
-
-[embed]
-files = ["NOW.md"]
-maxLines = 8
-collapsed = false
-
-[[links]]
-title = "comrade dashboard"
-url = "https://comrade.md"
-icon = "📊"
-
-[[links]]
-title = "github"
-url = "https://github.com/safetnsr/lair"
-icon = "🔗"
-
-[[links]]
-title = "documentation"
-url = "https://github.com/safetnsr/lair#readme"
-icon = "📖"
-```
-
----
-
-## Architecture
-
-```
-lair/
-├── src/
-│   ├── server/
-│   │   ├── index.ts       # Hono API server + WebSocket
-│   │   ├── scanner.ts     # File tree scanner + all feature processors
-│   │   └── renderer.ts    # Markdown/code/image rendering
-│   └── client/
-│       ├── App.tsx                           # Root component
-│       ├── types.ts                          # Shared TypeScript types
-│       ├── components/
-│       │   ├── directory-listing.tsx         # All 5 new features rendered here
-│       │   ├── app-sidebar.tsx               # Sidebar (respects [filter])
-│       │   ├── file-viewer.tsx               # File content viewer
-│       │   └── config-editor.tsx             # In-app TOML editor
-│       └── hooks/
-│           └── use-tome.ts                   # Data fetching hooks
-└── dist/                  # Built SPA assets
-```
-
-**Server features:**
-- Bun + Hono HTTP server
-- Real-time WebSocket refresh (chokidar file watcher)
-- In-memory file tree with 5s refresh interval
-- All feature processing (filter, pin, status, embed) on the server
-- In-app TOML editor via `PUT /api/config/*`
-
-**Client features:**
-- React SPA with Vite build
-- Dark/light/system theme toggle
-- Shadcn/ui components
-- Hash-based routing (`#path/to/file`)
-
----
-
-## API
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/tree` | Full file tree |
-| `GET` | `/api/content/*` | File or directory content (with all features applied) |
-| `GET` | `/api/config/*` | Raw TOML + parsed config for a directory |
-| `PUT` | `/api/config/*` | Save TOML config (validates before writing) |
-| `GET` | `/raw/*` | Serve raw files (images, downloads) |
-| `WS` | `/ws` | Real-time refresh notifications |
-
-### Content response for directories
-
-```json
-{
-  "type": "directory",
-  "path": "some/path",
-  "config": { ... },
-  "landingHtml": "<h1>...</h1>",
-  "children": [
-    {
-      "name": "NOW.md",
-      "path": "NOW.md",
-      "type": "file",
-      "ext": ".md",
-      "size": 421,
-      "modified": "2026-02-21T10:37:29.473Z",
-      "meta": {},
-      "embedHtml": "<h1>NOW</h1><p>...</p>",
-      "isPinned": true,
-      "statusBadge": "fresh"
-    }
-  ]
-}
-```
-
-New fields added to each child node:
-- `embedHtml` — rendered HTML string (only present if file is in `[embed].files`)
-- `isPinned` — boolean, true if file is in `[pin].files`
-- `statusBadge` — `"fresh"` | `"stale"` | `null` based on `[status]` config
-
----
+| Section | Key | Type | Default | Description |
+|---------|-----|------|---------|-------------|
+| `[header]` | `title` | string | folder name | Directory title |
+| | `description` | string | — | Subtitle below title |
+| | `icon` | string | — | Emoji before title |
+| `[display]` | `layout` | string | `"list"` | `list`, `cards`, `grid` |
+| | `sort` | string | `"name"` | `name`, `modified`, `created`, `size`, `type` |
+| | `order` | string | `"asc"` | `asc`, `desc` |
+| | `columns` | number | `3` | Column count for cards/grid |
+| | `showMeta` | boolean | `true` | Show file size + modified date |
+| `[pin]` | `files` | string[] | — | Filenames to pin to top |
+| `[filter]` | `hide` | string[] | — | Patterns to hide |
+| | `only` | string[] | — | Only show matching files |
+| `[status]` | `fresh` | string | — | Duration for "fresh" badge |
+| | `stale` | string | — | Duration for "stale" badge |
+| `[embed]` | `files` | string[] | — | Files to embed inline |
+| | `maxLines` | number | — | Truncate embed after N lines |
+| | `collapsed` | boolean | `false` | Start embeds collapsed |
+| `[[links]]` | `title` | string | — | Link display text |
+| | `url` | string | — | Link URL |
+| | `icon` | string | — | Emoji icon |
+| `[pages."filename"]` | | | | See [per-file styling](#per-file-styling) |
 
 ## Development
 
 ```bash
-# Install dependencies
+git clone https://github.com/safetnsr/lair
+cd lair
 bun install
-
-# Dev mode (client only, with HMR)
-bun run dev
-
-# Build production assets
-bun run build
-
-# Run production server
-bun run start /path/to/workspace
-
-# Type check
-npx tsc --noEmit
+bun run dev          # vite dev server (frontend)
+bun run dev:server   # lair server (backend)
+bun run build        # production build
 ```
 
----
+Requires [Bun](https://bun.sh). Stack: Hono + React + Tailwind + Radix UI.
 
 ## License
 
