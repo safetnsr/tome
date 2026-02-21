@@ -35,7 +35,7 @@ export function renderNav(nodes: FileNode[], currentPath: string, basePath: stri
   for (const node of nodes) {
     const href = node.type === "directory" ? `/page/${node.path}/` : `/page/${node.path}`;
     const isActive = currentPath === node.path || currentPath.startsWith(node.path + "/");
-    const icon = node.meta?.icon || (node.type === "directory" ? "📁" : fileIcon(node.ext));
+    const icon = node.meta?.icon || (node.type === "directory" ? "›" : fileIcon(node.ext));
     const displayName = node.meta?.title || cleanName(node.name);
 
     html += `<li class="${isActive ? "active" : ""}">`;
@@ -66,7 +66,7 @@ export function renderDirectoryListing(nodes: FileNode[], dirPath: string): stri
   let html = `<div class="directory-listing">`;
   for (const node of nodes) {
     const href = node.type === "directory" ? `/page/${node.path}/` : `/page/${node.path}`;
-    const icon = node.meta?.icon || (node.type === "directory" ? "📁" : fileIcon(node.ext));
+    const icon = node.meta?.icon || (node.type === "directory" ? "›" : fileIcon(node.ext));
     const displayName = node.meta?.title || cleanName(node.name);
     const childCount = node.children?.length || 0;
     const size = node.type === "file" ? formatSize(node.size) : `${childCount} ${childCount === 1 ? "item" : "items"}`;
@@ -93,12 +93,12 @@ function cleanName(name: string): string {
 
 function fileIcon(ext: string): string {
   const icons: Record<string, string> = {
-    ".md": "📄", ".json": "📋", ".toml": "⚙️", ".yaml": "⚙️", ".yml": "⚙️",
-    ".ts": "🟦", ".js": "🟨", ".py": "🐍", ".sh": "💻",
-    ".png": "🖼️", ".jpg": "🖼️", ".jpeg": "🖼️", ".gif": "🖼️", ".webp": "🖼️", ".svg": "🖼️",
-    ".css": "🎨", ".html": "🌐", ".sql": "🗃️",
+    ".md": "·", ".json": "·", ".toml": "·", ".yaml": "·", ".yml": "·",
+    ".ts": "·", ".js": "·", ".py": "·", ".sh": "·",
+    ".png": "·", ".jpg": "·", ".jpeg": "·", ".gif": "·", ".webp": "·", ".svg": "·",
+    ".css": "·", ".html": "·", ".sql": "·",
   };
-  return icons[ext] || "📎";
+  return icons[ext] || "·";
 }
 
 function formatSize(bytes: number): string {
@@ -210,7 +210,7 @@ const CSS = `
     border-right: 2px solid var(--accent);
   }
 
-  .nav-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
+  .nav-icon { font-size: 12px; width: 14px; text-align: center; flex-shrink: 0; opacity: 0.4; }
 
   /* content */
   .content {
@@ -269,7 +269,7 @@ const CSS = `
   .dir-item:hover { background: var(--bg-secondary); text-decoration: none; }
   .dir-item.highlight { background: var(--highlight-bg); border: 1px solid var(--border); }
 
-  .dir-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+  .dir-icon { font-size: 14px; width: 24px; text-align: center; flex-shrink: 0; font-family: "SF Mono", Monaco, Consolas, monospace; opacity: 0.5; }
   .dir-name { flex: 1; font-weight: 500; }
   .dir-meta { color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
 

@@ -6,11 +6,7 @@ turn any folder into a browsable site. zero config, live, dark mode.
 npx tome .
 ```
 
-## screenshots
-
-![home — directory listing](screenshots/home.png)
-![page — rendered markdown](screenshots/page.png)
-![directory — subdirectory browsing](screenshots/directory.png)
+![tome — browsing a markdown knowledge base](screenshots/demo.png)
 
 ## what it does
 
