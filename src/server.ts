@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { serve } from "bun";
 import { readFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import {
@@ -135,7 +134,9 @@ function findNode(nodes: FileNode[], path: string): FileNode | null {
 
 // --- Start ---
 
-serve({
+const server = Bun.serve({
   port: PORT,
   fetch: app.fetch,
 });
+
+console.log(`[tome] listening on http://localhost:${server.port}`);

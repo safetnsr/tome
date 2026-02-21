@@ -68,7 +68,8 @@ export function renderDirectoryListing(nodes: FileNode[], dirPath: string): stri
     const href = node.type === "directory" ? `/page/${node.path}/` : `/page/${node.path}`;
     const icon = node.meta?.icon || (node.type === "directory" ? "📁" : fileIcon(node.ext));
     const displayName = node.meta?.title || cleanName(node.name);
-    const size = node.type === "file" ? formatSize(node.size) : `${node.children?.length || 0} items`;
+    const childCount = node.children?.length || 0;
+    const size = node.type === "file" ? formatSize(node.size) : `${childCount} ${childCount === 1 ? "item" : "items"}`;
     const modified = timeAgo(node.modified);
 
     html += `<a href="${href}" class="dir-item${node.meta?.style === 'highlight' ? ' highlight' : ''}">
@@ -105,6 +106,8 @@ function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}K`;
   return `${(bytes / (1024 * 1024)).toFixed(1)}M`;
 }
+
+// fix "1 items" → "1 item"
 
 function timeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);

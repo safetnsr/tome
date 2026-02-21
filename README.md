@@ -6,6 +6,12 @@ turn any folder into a browsable site. zero config, live, dark mode.
 npx tome .
 ```
 
+## screenshots
+
+![home — directory listing](screenshots/home.png)
+![page — rendered markdown](screenshots/page.png)
+![directory — subdirectory browsing](screenshots/directory.png)
+
 ## what it does
 
 point tome at a folder. it scans every file and directory, renders them as navigable pages, and serves a local website. no build step, no config required.
