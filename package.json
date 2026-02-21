@@ -1,0 +1,29 @@
+{
+  "name": "tome",
+  "version": "0.1.0",
+  "description": "turn any folder into a browsable site. zero config, live, dark mode.",
+  "type": "module",
+  "bin": {
+    "tome": "./bin/tome.js"
+  },
+  "scripts": {
+    "dev": "bun run src/server.ts",
+    "build": "bun build src/server.ts --target=node --outdir=dist"
+  },
+  "dependencies": {
+    "hono": "^4.7.0",
+    "marked": "^15.0.0",
+    "chokidar": "^4.0.0",
+    "toml": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7.0"
+  },
+  "keywords": ["workspace", "viewer", "markdown", "documentation", "browser", "filesystem"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/safetnsr/tome"
+  }
+}
