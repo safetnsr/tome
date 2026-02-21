@@ -1,26 +1,141 @@
 # tome
 
-turn any folder into a browsable site. zero config, live, dark mode.
+turn any folder into a browsable site. built for [openclaw](https://github.com/openclaw/openclaw) agent workspaces.
 
-![tome — zero config](screenshots/01-default.png)
+![tome — zero config, just point at a folder](screenshots/01-default.png)
 
-## features
+## why
 
-- **zero config** — point at a folder, get a website
-- **shadcn/ui** — collapsible sidebar, breadcrumbs, proper components
-- **theme** — system, light, and dark mode with toggle
-- **live reload** — WebSocket-powered, changes appear instantly
-- **config editor** — gear icon on any directory to live-edit `.view.toml`
-- **file types** — markdown, json, toml, yaml, code, images
-- **`.view.toml`** — per-folder config for layout, sorting, theming, metadata
+openclaw agents accumulate knowledge: memory files, daily notes, runbooks, tool configs, lessons learned. tome makes that workspace browsable — for you and for the agent.
+
+- **zero config** — `npx tome .` and you're done
+- **live reload** — file changes appear instantly via websocket
+- **per-folder config** — `.view.toml` to customize any directory
+- **dark mode** — system, light, dark with toggle
 
 ## quick start
 
 ```bash
-npx tome .              # current directory
-npx tome ~/notes        # any folder
-npx tome /var/www/docs  # absolute path
+npx tome .                    # current directory
+npx tome ~/.openclaw/workspace  # agent workspace
+npx tome /var/www/docs        # any folder
 ```
+
+## use cases
+
+### agent workspace overview
+
+give your workspace a title, switch to card layout, and tag your folders.
+
+```toml
+[header]
+title = "maeve's workspace"
+description = "memory, tools, crons, and configuration"
+icon = "M"
+
+[display]
+layout = "cards"
+columns = 2
+showMeta = true
+
+[pages."memory"]
+badge = "core"
+color = "#10b981"
+
+[pages."tools"]
+badge = "automation"
+color = "#3b82f6"
+```
+
+![workspace overview — cards with custom header](screenshots/02-cards.png)
+
+### memory browser
+
+browse the agent's knowledge tree. grid layout works well for folders with mixed content.
+
+```toml
+[header]
+title = "agent memory"
+description = "knowledge tree — topic-based, wiki-linked"
+
+[display]
+layout = "grid"
+columns = 3
+showMeta = true
+sort = "modified"
+```
+
+![memory folder — grid layout, sorted by modified](screenshots/03-memory.png)
+
+### daily notes
+
+session logs sorted by date. see what shipped, what broke, what's next.
+
+```toml
+[header]
+title = "daily notes"
+description = "session logs — what shipped, what broke, what's next"
+
+[display]
+layout = "list"
+sort = "modified"
+showMeta = true
+```
+
+![daily notes — list view, latest first](screenshots/04-daily.png)
+
+### runbooks
+
+rendered markdown with full formatting — headings, code blocks, step-by-step procedures.
+
+![gateway recovery runbook — rendered markdown](screenshots/05-runbook.png)
+
+### tools overview
+
+table layout for quick scanning.
+
+```toml
+[header]
+title = "agent tools"
+description = "scripts, crons, and automation"
+
+[display]
+layout = "table"
+sort = "name"
+showMeta = true
+```
+
+![tools — table layout, sorted by name](screenshots/06-tools.png)
+
+## .view.toml reference
+
+drop a `.view.toml` in any folder. or click the gear icon in the UI.
+
+```toml
+[header]
+title = "my section"
+description = "what this folder contains"
+icon = "S"                    # single character
+
+[display]
+layout = "cards"              # list, cards, grid, table
+sort = "modified"             # name, modified, created, size, type
+columns = 3                   # for cards/grid
+showMeta = true
+groupBy = "type"              # none, type, ext, tag
+
+[theme]
+accent = "#3b82f6"
+compact = false
+
+[pages."README.md"]
+title = "introduction"
+badge = "start here"
+color = "#10b981"
+tags = ["docs", "getting-started"]
+```
+
+every option is live-editable via the gear icon. changes apply instantly.
 
 ## development
 
@@ -29,117 +144,16 @@ git clone https://github.com/safetnsr/tome
 cd tome
 bun install
 
-# dev mode (vite + hot reload)
 bun run dev             # frontend on :5173
 bun run dev:server      # api on :3333
 
-# production
 bun run build
-bun run start           # serves built SPA + API on :3333
+bun run start           # production on :3333
 ```
 
-## .view.toml
+## tech
 
-drop a `.view.toml` in any folder to configure it. or use the gear icon in the UI.
-
-### 2-column card grid
-
-```toml
-[header]
-title = "project hub"
-description = "documentation, tools, and daily notes"
-icon = "P"
-
-[display]
-layout = "cards"
-columns = 2
-showMeta = true
-```
-
-![cards layout — custom title, 2-column grid](screenshots/03-cards.png)
-
-### 3-column grid
-
-```toml
-[header]
-title = "workspace"
-description = "everything in one place"
-
-[display]
-layout = "grid"
-columns = 3
-showMeta = true
-groupBy = "type"
-
-[theme]
-accent = "#8b5cf6"
-```
-
-![grid layout — 3 columns, custom accent](screenshots/04-grid.png)
-
-### table view
-
-```toml
-[header]
-title = "file index"
-description = "sorted by last modified"
-
-[display]
-layout = "table"
-sort = "modified"
-showMeta = true
-```
-
-![table layout — flat list, sorted by modified](screenshots/05-table.png)
-
-### markdown rendering
-
-tome renders markdown files with full formatting — headings, code blocks, lists, inline styles.
-
-![rendered markdown file](screenshots/02-markdown.png)
-
-### all config options
-
-```toml
-[header]
-title = "my project"
-description = "project documentation"
-icon = "P"
-
-[display]
-layout = "cards"          # list, cards, grid, table, timeline
-sort = "modified"         # name, modified, created, size, type, manual
-columns = 3
-showMeta = true
-groupBy = "type"          # none, type, ext, tag
-
-[theme]
-accent = "#3b82f6"
-compact = false
-
-[pages."README.md"]
-title = "introduction"
-style = "hero"
-badge = "start here"
-color = "#10b981"
-tags = ["docs", "getting-started"]
-```
-
-### visual config editor
-
-click the gear icon (top-right) on any directory to open the live config editor:
-
-- **visual mode** — buttons and toggles for layout, sort, theme, header
-- **toml mode** — raw editor with validation
-- **real-time** — changes apply instantly via WebSocket
-- debounced saves (600ms) — type naturally, it saves
-
-## tech stack
-
-- **frontend**: react 19 + shadcn/ui + tailwind css v4
-- **backend**: hono + bun
-- **realtime**: websocket + chokidar file watcher
-- **rendering**: marked (markdown), syntax highlighting (code)
+react 19 + shadcn/ui + tailwind v4 + hono + bun + websocket + chokidar + marked
 
 ## license
 
