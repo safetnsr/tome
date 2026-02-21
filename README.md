@@ -2,7 +2,7 @@
 
 turn any folder into a browsable site. zero config, live, dark mode.
 
-![tome — zero config](screenshots/dark.png)
+![tome — zero config](screenshots/01-default.png)
 
 ## features
 
@@ -42,53 +42,61 @@ bun run start           # serves built SPA + API on :3333
 
 drop a `.view.toml` in any folder to configure it. or use the gear icon in the UI.
 
-### card grid with badges and custom header
+### 2-column card grid
 
 ```toml
 [header]
-title = "my workspace"
-description = "documentation, tools, and notes"
-icon = "W"
+title = "project hub"
+description = "documentation, tools, and daily notes"
+icon = "P"
 
 [display]
 layout = "cards"
 columns = 2
 showMeta = true
-groupBy = "type"
-
-[pages."tools"]
-badge = "automation"
-color = "#3b82f6"
-tags = ["crons", "scripts"]
-
-[pages."memory"]
-badge = "core"
-color = "#10b981"
-tags = ["knowledge", "daily notes"]
 ```
 
-![cards layout — custom title, badges, colored borders](screenshots/3-configured.png)
+![cards layout — custom title, 2-column grid](screenshots/03-cards.png)
 
-### list view with full descriptions
+### 3-column grid
 
 ```toml
 [header]
-title = "memory"
-description = "knowledge tree — topic-based, wiki-linked"
+title = "workspace"
+description = "everything in one place"
 
 [display]
-layout = "list"
+layout = "grid"
+columns = 3
+showMeta = true
+groupBy = "type"
+
+[theme]
+accent = "#8b5cf6"
+```
+
+![grid layout — 3 columns, custom accent](screenshots/04-grid.png)
+
+### table view
+
+```toml
+[header]
+title = "file index"
+description = "sorted by last modified"
+
+[display]
+layout = "table"
 sort = "modified"
 showMeta = true
 ```
 
-![list layout — full descriptions, nested sidebar](screenshots/4-subfolder.png)
+![table layout — flat list, sorted by modified](screenshots/05-table.png)
 
 ### markdown rendering
 
 tome renders markdown files with full formatting — headings, code blocks, lists, inline styles.
 
-![rendered markdown file](screenshots/2-page.png)
+![rendered markdown file](screenshots/02-markdown.png)
 
 ### all config options
 
