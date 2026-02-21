@@ -2,7 +2,7 @@
 
 **turn any folder into a browsable workspace.** built for [openclaw](https://openclaw.com) agent workspaces.
 
-![lair zero config](screenshots/01-zero-config.png)
+![lair zero config](screenshots/01-zero-config-v2.png)
 
 ---
 
@@ -31,7 +31,7 @@ with no `.view.toml`, lair gives you:
 - light/dark/system theme toggle
 - real-time updates when files change
 
-![zero config view](screenshots/01-zero-config.png)
+![zero config view](screenshots/01-zero-config-v2.png)
 
 ## your first `.view.toml`
 
@@ -44,7 +44,7 @@ description = "memory, tools, and config for the openclaw agent"
 icon = "🧠"
 ```
 
-![header config](screenshots/02-header.png)
+![header config](screenshots/02-header-v2.png)
 
 each directory can have its own `.view.toml` — nest configs however you want.
 
@@ -58,7 +58,7 @@ layout = "cards"
 columns = 2
 ```
 
-![cards layout](screenshots/03-cards.png)
+![cards layout](screenshots/03-cards-v2.png)
 
 ### grid
 
@@ -68,7 +68,7 @@ layout = "grid"
 columns = 3
 ```
 
-![grid layout](screenshots/04-grid.png)
+![grid layout](screenshots/04-grid-v2.png)
 
 ### list
 
@@ -79,7 +79,7 @@ sort = "modified"
 order = "desc"
 ```
 
-![list layout](screenshots/05-list.png)
+![list layout](screenshots/05-list-v2.png)
 
 ## pin
 
@@ -90,7 +90,7 @@ pin important files to the top. they get a visual separator from the rest.
 files = ["NOW.md", "SOUL.md"]
 ```
 
-![pinned files](screenshots/06-pin.png)
+![pinned files](screenshots/06-pin-v2.png)
 
 ## filter
 
@@ -114,7 +114,7 @@ fresh = "24h"    # modified within 24 hours → green "fresh" badge
 stale = "7d"     # not modified for 7+ days → gray "stale" badge
 ```
 
-![status badges](screenshots/07-status.png)
+![status badges](screenshots/07-status-v2.png)
 
 duration format: `24h`, `7d`, `2w`, `1m` (hours, days, weeks, months).
 
@@ -129,7 +129,7 @@ maxLines = 8           # truncate after n lines
 collapsed = false      # start collapsed (click to expand)
 ```
 
-![embedded content](screenshots/08-embed.png)
+![embedded content](screenshots/08-embed-v2.png)
 
 ## links
 
@@ -147,7 +147,7 @@ url = "https://api.comrade.md/docs"
 icon = "📖"
 ```
 
-![links section](screenshots/09-links.png)
+![links section](screenshots/09-links-v2.png)
 
 ## per-file styling
 
@@ -168,7 +168,7 @@ color = "#8b5cf6"
 description = "knowledge base and daily notes"
 ```
 
-![per-file styling](screenshots/10-pages.png)
+![per-file styling](screenshots/10-pages-v2.png)
 
 ### page options
 
