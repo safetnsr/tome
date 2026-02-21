@@ -1,56 +1,56 @@
 # lair
 
-**Turn any folder into a browsable workspace.** Built for [OpenClaw](https://openclaw.com) agent workspaces.
+**turn any folder into a browsable workspace.** built for [openclaw](https://openclaw.com) agent workspaces.
 
 ![lair zero config](screenshots/01-zero-config.png)
 
 ---
 
-## Why lair?
+## why lair?
 
-- **See your agent's workspace** — markdown rendered, files browsable, real-time updates
-- **Zero config start** — point it at a directory, get a clean UI instantly
-- **Progressive config** — add a `.view.toml` to any folder to control layout, pins, embeds, and more
-- **Built for agents** — designed around how OpenClaw agents organize memory, tools, and config
+- **see your agent's workspace** — markdown rendered, files browsable, real-time updates
+- **zero config start** — point it at a directory, get a clean ui instantly
+- **progressive config** — add a `.view.toml` to any folder to control layout, pins, embeds, and more
+- **built for agents** — designed around how openclaw agents organize memory, tools, and config
 
-## Quick start
+## quick start
 
 ```bash
 npx lair ~/workspace
 ```
 
-Open `http://localhost:3333`. That's it.
+open `http://localhost:3333`. that's it.
 
-## Zero config
+## zero config
 
-With no `.view.toml`, lair gives you:
+with no `.view.toml`, lair gives you:
 
-- File tree sidebar with collapsible folders
-- Markdown rendering for `.md` files
-- File size and modification timestamps
-- Light/dark/system theme toggle
-- Real-time updates when files change
+- file tree sidebar with collapsible folders
+- markdown rendering for `.md` files
+- file size and modification timestamps
+- light/dark/system theme toggle
+- real-time updates when files change
 
 ![zero config view](screenshots/01-zero-config.png)
 
-## Your first `.view.toml`
+## your first `.view.toml`
 
-Drop a `.view.toml` in any directory to customize it. Start simple:
+drop a `.view.toml` in any directory to customize it. start simple:
 
 ```toml
 [header]
-title = "Agent Workspace"
-description = "Memory, tools, and config for the OpenClaw agent"
+title = "agent workspace"
+description = "memory, tools, and config for the openclaw agent"
 icon = "🧠"
 ```
 
 ![header config](screenshots/02-header.png)
 
-Each directory can have its own `.view.toml` — nest configs however you want.
+each directory can have its own `.view.toml` — nest configs however you want.
 
-## Layouts
+## layouts
 
-### Cards
+### cards
 
 ```toml
 [display]
@@ -60,7 +60,7 @@ columns = 2
 
 ![cards layout](screenshots/03-cards.png)
 
-### Grid
+### grid
 
 ```toml
 [display]
@@ -70,7 +70,7 @@ columns = 3
 
 ![grid layout](screenshots/04-grid.png)
 
-### List
+### list
 
 ```toml
 [display]
@@ -81,9 +81,9 @@ order = "desc"
 
 ![list layout](screenshots/05-list.png)
 
-## Pin
+## pin
 
-Pin important files to the top. They get a visual separator from the rest.
+pin important files to the top. they get a visual separator from the rest.
 
 ```toml
 [pin]
@@ -92,9 +92,9 @@ files = ["NOW.md", "SOUL.md"]
 
 ![pinned files](screenshots/06-pin.png)
 
-## Filter
+## filter
 
-Control which files appear in a directory listing.
+control which files appear in a directory listing.
 
 ```toml
 [filter]
@@ -102,11 +102,11 @@ hide = ["*.log", "draft/"]     # hide by name, extension, or glob
 only = [".md", ".toml"]        # only show these extensions (directories always show)
 ```
 
-Patterns: `*.md` or `.md` for extensions, `drafts/` for directories, `SECRET.md` for exact names.
+patterns: `*.md` or `.md` for extensions, `drafts/` for directories, `secret.md` for exact names.
 
-## Status
+## status
 
-Show freshness badges based on file modification time.
+show freshness badges based on file modification time.
 
 ```toml
 [status]
@@ -116,48 +116,48 @@ stale = "7d"     # not modified for 7+ days → gray "stale" badge
 
 ![status badges](screenshots/07-status.png)
 
-Duration format: `24h`, `7d`, `2w`, `1m` (hours, days, weeks, months).
+duration format: `24h`, `7d`, `2w`, `1m` (hours, days, weeks, months).
 
-## Embed
+## embed
 
-Inline file content directly in the directory listing.
+inline file content directly in the directory listing.
 
 ```toml
 [embed]
 files = ["NOW.md"]
-maxLines = 8           # truncate after N lines
+maxLines = 8           # truncate after n lines
 collapsed = false      # start collapsed (click to expand)
 ```
 
 ![embedded content](screenshots/08-embed.png)
 
-## Links
+## links
 
-Add external links to any directory listing.
+add external links to any directory listing.
 
 ```toml
 [[links]]
-title = "GitHub"
+title = "github"
 url = "https://github.com/safetnsr"
 icon = "🐙"
 
 [[links]]
-title = "API Docs"
+title = "api docs"
 url = "https://api.comrade.md/docs"
 icon = "📖"
 ```
 
 ![links section](screenshots/09-links.png)
 
-## Per-file styling
+## per-file styling
 
-Use `[pages]` to add badges, colors, tags, and descriptions to individual files:
+use `[pages]` to add badges, colors, tags, and descriptions to individual files:
 
 ```toml
 [pages."NOW.md"]
 badge = "active"
 color = "#22c55e"
-description = "Current priorities and blockers"
+description = "current priorities and blockers"
 tags = ["priority", "daily"]
 
 [pages."SOUL.md"]
@@ -165,55 +165,55 @@ badge = "core"
 color = "#8b5cf6"
 
 [pages."memory/"]
-description = "Knowledge base and daily notes"
+description = "knowledge base and daily notes"
 ```
 
 ![per-file styling](screenshots/10-pages.png)
 
-### Page options
+### page options
 
-| Option | Type | Description |
+| option | type | description |
 |--------|------|-------------|
-| `title` | string | Override display name |
-| `icon` | string | Emoji or icon |
-| `description` | string | Shown next to filename (list) or below (cards) |
-| `badge` | string | Small label badge |
-| `color` | string | Left border color (hex) |
-| `tags` | string[] | Tag badges (cards layout) |
-| `order` | number | Manual sort order |
-| `pinned` | boolean | Pin this file to top |
-| `hidden` | boolean | Hide from listing |
+| `title` | string | override display name |
+| `icon` | string | emoji or icon |
+| `description` | string | shown next to filename (list) or below (cards) |
+| `badge` | string | small label badge |
+| `color` | string | left border color (hex) |
+| `tags` | string[] | tag badges (cards layout) |
+| `order` | number | manual sort order |
+| `pinned` | boolean | pin this file to top |
+| `hidden` | boolean | hide from listing |
 | `style` | string | `"highlight"`, `"hero"`, `"compact"`, `"full"`, `"raw"`, `"aside"` |
-| `collapsed` | boolean | Start directory collapsed in sidebar |
-| `cover` | string | Image path for cards layout |
-| `redirect` | string | Redirect to another path |
+| `collapsed` | boolean | start directory collapsed in sidebar |
+| `cover` | string | image path for cards layout |
+| `redirect` | string | redirect to another path |
 
-## Full `.view.toml` reference
+## full `.view.toml` reference
 
-| Section | Key | Type | Default | Description |
+| section | key | type | default | description |
 |---------|-----|------|---------|-------------|
-| `[header]` | `title` | string | folder name | Directory title |
-| | `description` | string | — | Subtitle below title |
-| | `icon` | string | — | Emoji before title |
+| `[header]` | `title` | string | folder name | directory title |
+| | `description` | string | — | subtitle below title |
+| | `icon` | string | — | emoji before title |
 | `[display]` | `layout` | string | `"list"` | `list`, `cards`, `grid` |
 | | `sort` | string | `"name"` | `name`, `modified`, `created`, `size`, `type` |
 | | `order` | string | `"asc"` | `asc`, `desc` |
-| | `columns` | number | `3` | Column count for cards/grid |
-| | `showMeta` | boolean | `true` | Show file size + modified date |
-| `[pin]` | `files` | string[] | — | Filenames to pin to top |
-| `[filter]` | `hide` | string[] | — | Patterns to hide |
-| | `only` | string[] | — | Only show matching files |
-| `[status]` | `fresh` | string | — | Duration for "fresh" badge |
-| | `stale` | string | — | Duration for "stale" badge |
-| `[embed]` | `files` | string[] | — | Files to embed inline |
-| | `maxLines` | number | — | Truncate embed after N lines |
-| | `collapsed` | boolean | `false` | Start embeds collapsed |
-| `[[links]]` | `title` | string | — | Link display text |
-| | `url` | string | — | Link URL |
-| | `icon` | string | — | Emoji icon |
-| `[pages."filename"]` | | | | See [per-file styling](#per-file-styling) |
+| | `columns` | number | `3` | column count for cards/grid |
+| | `showMeta` | boolean | `true` | show file size + modified date |
+| `[pin]` | `files` | string[] | — | filenames to pin to top |
+| `[filter]` | `hide` | string[] | — | patterns to hide |
+| | `only` | string[] | — | only show matching files |
+| `[status]` | `fresh` | string | — | duration for "fresh" badge |
+| | `stale` | string | — | duration for "stale" badge |
+| `[embed]` | `files` | string[] | — | files to embed inline |
+| | `maxLines` | number | — | truncate embed after n lines |
+| | `collapsed` | boolean | `false` | start embeds collapsed |
+| `[[links]]` | `title` | string | — | link display text |
+| | `url` | string | — | link url |
+| | `icon` | string | — | emoji icon |
+| `[pages."filename"]` | | | | see [per-file styling](#per-file-styling) |
 
-## Development
+## development
 
 ```bash
 git clone https://github.com/safetnsr/lair
@@ -224,8 +224,8 @@ bun run dev:server   # lair server (backend)
 bun run build        # production build
 ```
 
-Requires [Bun](https://bun.sh). Stack: Hono + React + Tailwind + Radix UI.
+requires [bun](https://bun.sh). stack: hono + react + tailwind + radix ui.
 
-## License
+## license
 
-MIT
+mit
