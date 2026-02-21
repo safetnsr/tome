@@ -1,41 +1,52 @@
 {
-  "name": "lair",
+  "name": "@openclaw/lair",
   "version": "0.3.0",
-  "description": "turn any folder into a browsable site. built for openclaw agent workspaces.",
+  "description": "turn any folder into a browsable workspace. built for openclaw agent workspaces.",
   "type": "module",
   "bin": {
     "lair": "./bin/lair.js"
   },
+  "files": [
+    "bin/",
+    "server/",
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "vite",
-    "dev:server": "bun run src/server/index.ts",
-    "build": "vite build",
-    "preview": "vite preview",
-    "start": "bun run src/server/index.ts"
+    "dev:server": "tsx src/server/index.ts",
+    "build": "vite build && tsup",
+    "start": "node bin/lair.js",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@hono/node-server": "^1.0.0",
     "chokidar": "^4.0.0",
     "hono": "^4.7.0",
     "marked": "^15.0.0",
-    "radix-ui": "^1.4.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "toml": "^3.0.0"
+    "toml": "^3.0.0",
+    "ws": "^8.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/ws": "^8.0.0",
     "typescript": "^5.7.0",
     "@vitejs/plugin-react": "^4.3.0",
     "@tailwindcss/vite": "^4.0.0",
     "tailwindcss": "^4.0.0",
     "vite": "^6.0.0",
+    "tsup": "^8.0.0",
     "tw-animate-css": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.0",
     "tailwind-merge": "^3.0.0",
     "lucide-react": "^0.575.0",
+    "radix-ui": "^1.4.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-separator": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.0",
@@ -46,6 +57,9 @@
     "@radix-ui/react-switch": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-label": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "keywords": ["workspace", "viewer", "markdown", "openclaw", "agent", "browser", "filesystem"],
   "license": "MIT",

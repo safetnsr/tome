@@ -13,10 +13,18 @@
 - **progressive config** — add a `.view.toml` to any folder to control layout, pins, embeds, and more
 - **built for agents** — designed around how openclaw agents organize memory, tools, and config
 
-## quick start
+## install
 
 ```bash
-npx lair ~/workspace
+npx @openclaw/lair ~/workspace
+```
+
+or install globally:
+
+```bash
+npm i -g @openclaw/lair
+lair ~/workspace
+lair .
 ```
 
 open `http://localhost:3333`. that's it.

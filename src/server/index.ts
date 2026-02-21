@@ -1,6 +1,11 @@
 import { Hono } from "hono";
-import { readFile, writeFile } from "node:fs/promises";
-import { resolve, join } from "node:path";
+import { readFile, writeFile, stat } from "node:fs/promises";
+import { resolve, join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createReadStream } from "node:fs";
+import { serve } from "@hono/node-server";
+import { WebSocketServer } from "ws";
+import { lookup } from "node:dns";
 import {
   scanDirectory,
   readFileContent,
@@ -13,9 +18,10 @@ import {
 } from "./scanner.js";
 import { renderContent, renderMarkdown } from "./renderer.js";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(process.argv[2] || ".");
 const PORT = parseInt(process.env.PORT || "3333", 10);
-const STATIC_DIR = resolve(import.meta.dir, "../../dist");
+const STATIC_DIR = resolve(__dirname, "../../dist");
 
 console.log(`[lair] scanning ${ROOT}`);
 console.log(`[lair] http://localhost:${PORT}`);
@@ -51,18 +57,15 @@ const app = new Hono();
 
 // --- API Routes ---
 
-// Get full file tree
 app.get("/api/tree", async (c) => {
   await refresh();
   return c.json({ tree: serializeTree(tree) });
 });
 
-// Get file/directory content
 app.get("/api/content/*", async (c) => {
   const pagePath = c.req.path.replace("/api/content/", "").replace(/\/$/, "");
   
   if (!pagePath) {
-    // Root
     const landing = findLandingPage(tree);
     const rootConfig = await loadViewConfig(ROOT);
     let html = "";
@@ -70,7 +73,6 @@ app.get("/api/content/*", async (c) => {
       const text = await readFileContent(landing);
       html = renderContent(text, landing);
     }
-    // Apply new features to root children
     const processedChildren = await processDirectoryNodes(tree, rootConfig, ROOT);
     return c.json({
       type: "directory",
@@ -93,7 +95,6 @@ app.get("/api/content/*", async (c) => {
       const text = await readFileContent(landing);
       landingHtml = renderContent(text, landing);
     }
-    // Apply new features to directory children
     const processedChildren = await processDirectoryNodes(children, dirConfig, node.absolutePath);
     return c.json({
       type: "directory",
@@ -104,7 +105,6 @@ app.get("/api/content/*", async (c) => {
     });
   }
 
-  // File
   const text = await readFileContent(node);
   const html = renderContent(text, node);
   return c.json({
@@ -120,7 +120,6 @@ app.get("/api/content/*", async (c) => {
   });
 });
 
-// Get view config for a directory
 app.get("/api/config/*", async (c) => {
   const dirPath = c.req.path.replace("/api/config/", "").replace(/\/$/, "");
   const fullPath = dirPath ? join(ROOT, dirPath) : ROOT;
@@ -129,16 +128,14 @@ app.get("/api/config/*", async (c) => {
   
   const config = await loadViewConfig(fullPath);
   
-  // Also read raw TOML for the editor
   let rawToml = "";
   try {
     rawToml = await readFile(join(fullPath, ".view.toml"), "utf-8");
-  } catch { /* no config file */ }
+  } catch {}
   
   return c.json({ config, rawToml, dirPath });
 });
 
-// Save view config for a directory
 app.put("/api/config/*", async (c) => {
   const dirPath = c.req.path.replace("/api/config/", "").replace(/\/$/, "");
   const fullPath = dirPath ? join(ROOT, dirPath) : ROOT;
@@ -152,7 +149,6 @@ app.put("/api/config/*", async (c) => {
     return c.json({ error: "toml field required" }, 400);
   }
   
-  // Validate TOML before saving
   try {
     const { parse } = await import("toml");
     parse(tomlContent);
@@ -163,7 +159,6 @@ app.put("/api/config/*", async (c) => {
   await writeFile(join(fullPath, ".view.toml"), tomlContent, "utf-8");
   await refresh();
   
-  // Notify WS clients
   const msg = JSON.stringify({ type: "config-changed", dirPath });
   for (const ws of wsClients) {
     try { ws.send(msg); } catch { wsClients.delete(ws); }
@@ -172,34 +167,37 @@ app.put("/api/config/*", async (c) => {
   return c.json({ ok: true });
 });
 
-// Raw file serving (images, downloads)
+// Raw file serving
 app.get("/raw/*", async (c) => {
   const filePath = c.req.path.replace("/raw/", "");
   const fullPath = join(ROOT, filePath);
   if (!fullPath.startsWith(ROOT)) return c.text("forbidden", 403);
   try {
-    const file = Bun.file(fullPath);
-    return new Response(file);
+    const content = await readFile(fullPath);
+    const mime = getMimeType(filePath);
+    return new Response(content, { headers: { "content-type": mime } });
   } catch {
     return c.text("not found", 404);
   }
 });
 
-// Serve static SPA files for production
+// Serve static SPA files
 app.get("*", async (c) => {
   const reqPath = c.req.path;
   
-  // Try serving static file from dist
   try {
     const filePath = reqPath === "/" ? "/index.html" : reqPath;
-    const file = Bun.file(join(STATIC_DIR, filePath));
-    if (await file.exists()) return new Response(file);
+    const fullPath = join(STATIC_DIR, filePath);
+    await stat(fullPath);
+    const content = await readFile(fullPath);
+    const mime = getMimeType(filePath);
+    return new Response(content, { headers: { "content-type": mime } });
   } catch {}
   
-  // Fallback to index.html for SPA routing
   try {
-    const indexFile = Bun.file(join(STATIC_DIR, "index.html"));
-    if (await indexFile.exists()) return new Response(indexFile, { headers: { "content-type": "text/html" } });
+    const indexPath = join(STATIC_DIR, "index.html");
+    const content = await readFile(indexPath);
+    return new Response(content, { headers: { "content-type": "text/html" } });
   } catch {}
   
   return c.text("not found - run `bun run build` first", 404);
@@ -207,25 +205,15 @@ app.get("*", async (c) => {
 
 // --- Feature processors ---
 
-/**
- * Process directory nodes applying all new features:
- * filter → pin → status → embed
- */
 async function processDirectoryNodes(
   nodes: FileNode[],
   config: any,
   dirPath: string
 ): Promise<FileNode[]> {
-  // 1. Apply filter (hide/only)
   let processed = applyFilter(nodes, config);
-
-  // 2. Apply pin (mark + sort to top)
   processed = applyPin(processed, config);
-
-  // 3. Apply status badges
   processed = applyStatusBadges(processed, config);
 
-  // 4. Apply embed (load HTML content for embedded files)
   if (config?.embed?.files && config.embed.files.length > 0) {
     const embedSet = new Set(config.embed.files as string[]);
     processed = await Promise.all(
@@ -281,24 +269,27 @@ function findNode(nodes: FileNode[], path: string): FileNode | null {
   return null;
 }
 
+function getMimeType(path: string): string {
+  const ext = path.split('.').pop()?.toLowerCase();
+  const types: Record<string, string> = {
+    html: 'text/html', css: 'text/css', js: 'application/javascript',
+    json: 'application/json', png: 'image/png', jpg: 'image/jpeg',
+    jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml',
+    ico: 'image/x-icon', woff: 'font/woff', woff2: 'font/woff2',
+    md: 'text/markdown', txt: 'text/plain', toml: 'text/plain',
+  };
+  return types[ext || ''] || 'application/octet-stream';
+}
+
 // --- Start ---
 
-const server = Bun.serve({
-  port: PORT,
-  fetch(req, server) {
-    // WebSocket upgrade
-    if (req.url.endsWith("/ws")) {
-      const success = server.upgrade(req);
-      if (success) return undefined;
-      return new Response("WebSocket upgrade failed", { status: 400 });
-    }
-    return app.fetch(req);
-  },
-  websocket: {
-    open(ws) { wsClients.add(ws); },
-    close(ws) { wsClients.delete(ws); },
-    message() {},
-  },
+const server = serve({ fetch: app.fetch, port: PORT });
+
+// WebSocket server on same port
+const wss = new WebSocketServer({ server: server as any });
+wss.on('connection', (ws) => {
+  wsClients.add(ws);
+  ws.on('close', () => wsClients.delete(ws));
 });
 
-console.log(`[lair] listening on http://localhost:${server.port}`);
+console.log(`[lair] listening on http://localhost:${PORT}`);
