@@ -1,3 +1,5 @@
 node_modules/\ndist/\n*.lock\nbun.lockb
 node_modules/
 bun.lock
+dist/
+node_modules/
