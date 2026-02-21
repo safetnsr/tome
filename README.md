@@ -2,9 +2,7 @@
 
 turn any folder into a browsable site. zero config, live, dark mode.
 
-![dark mode](screenshots/dark.png)
-![light mode](screenshots/light.png)
-![directory view](screenshots/directory.png)
+![tome — zero config](screenshots/dark.png)
 
 ## features
 
@@ -43,6 +41,56 @@ bun run start           # serves built SPA + API on :3333
 ## .view.toml
 
 drop a `.view.toml` in any folder to configure it. or use the gear icon in the UI.
+
+### card grid with badges and custom header
+
+```toml
+[header]
+title = "my workspace"
+description = "documentation, tools, and notes"
+icon = "W"
+
+[display]
+layout = "cards"
+columns = 2
+showMeta = true
+groupBy = "type"
+
+[pages."tools"]
+badge = "automation"
+color = "#3b82f6"
+tags = ["crons", "scripts"]
+
+[pages."memory"]
+badge = "core"
+color = "#10b981"
+tags = ["knowledge", "daily notes"]
+```
+
+![cards layout — custom title, badges, colored borders](screenshots/3-configured.png)
+
+### list view with full descriptions
+
+```toml
+[header]
+title = "memory"
+description = "knowledge tree — topic-based, wiki-linked"
+
+[display]
+layout = "list"
+sort = "modified"
+showMeta = true
+```
+
+![list layout — full descriptions, nested sidebar](screenshots/4-subfolder.png)
+
+### markdown rendering
+
+tome renders markdown files with full formatting — headings, code blocks, lists, inline styles.
+
+![rendered markdown file](screenshots/2-page.png)
+
+### all config options
 
 ```toml
 [header]
