@@ -3,118 +3,159 @@
 turn any folder into a browsable site. zero config, live, dark mode.
 
 ```bash
-npx tome .
+bunx tome /path/to/folder
 ```
 
-![tome — browsing a markdown knowledge base](screenshots/demo.png)
+## zero config
 
-*with a `.view.toml` config:*
+point tome at a folder. it scans every file and directory, renders them as navigable pages, and serves a local website. no setup required.
 
-![tome — cards layout with badges, colors, tags](screenshots/demo-config.png)
+![zero config — just point and browse](screenshots/1-zero-config.png)
 
-## what it does
+every file becomes a page. every folder becomes a section. markdown is rendered, code is highlighted, json is formatted. navigation is auto-generated from your folder structure.
 
-point tome at a folder. it scans every file and directory, renders them as navigable pages, and serves a local website. no build step, no config required.
+![a markdown page with sidebar navigation](screenshots/2-page.png)
 
-- **markdown** → rendered prose
-- **json** → formatted tree
-- **toml/yaml** → key-value display
-- **code** → syntax highlighted
-- **images** → inline gallery
-- **directories** → auto-generated listings
+**what gets rendered:**
+- `.md` → prose with full markdown support (headings, tables, code blocks, links)
+- `.json` → formatted, collapsible tree view
+- `.toml` / `.yaml` → key-value display
+- `.ts` / `.js` / `.py` / `.sh` → syntax highlighted code
+- images → inline display
+- everything else → plain text
 
-## features
-
-- zero config — just run it
-- live updates — edits appear instantly
-- dark mode — because obviously
-- sidebar navigation — auto-generated from folder structure
-- breadcrumbs — always know where you are
-- smart defaults — `_about.md` or `README.md` becomes the landing page
-- hidden files — dotfiles and `_` prefixed files hidden by default
+**smart defaults:**
+- `_about.md` or `README.md` in a folder → landing page for that section
+- dotfiles and `node_modules` → hidden automatically
+- directories listed before files
+- pinned items (`_about.md`, `README.md`) shown first
 
 ## optional config
 
-drop a `.view.toml` in any folder to customize how that folder renders. everything is optional — tome works without any config.
+drop a `.view.toml` in any folder to customize how it renders. config is always optional — tome works without it, and each folder can have its own.
 
-### display
-
-```toml
-[display]
-layout = "cards"          # list | cards | grid | table | timeline
-columns = 2              # for cards/grid layouts
-sort = "modified"         # name | modified | created | size | type | manual
-order = "desc"            # asc | desc
-hidden = ["*.json", "archive/"]
-pinned = ["NOW.md"]
-showMeta = true           # show file size + modified date
-showPreview = true        # show first lines of markdown files
-previewLines = 3          # how many lines to preview
-groupBy = "type"          # type | ext | tag | none
-emptyMessage = "nothing here yet"
-maxDepth = 3              # max recursion depth
-showCount = true          # show child count on directories
-```
-
-### header
+### cards layout with badges and descriptions
 
 ```toml
 [header]
-title = "deep reads"
-description = "what builders write — full analysis, honest takes"
-icon = "◈"
-banner = "cover.png"      # image path relative to folder
+title = "maeve's workspace"
+description = "openclaw agent workspace — memory, tools, crons, and configuration"
+
+[display]
+layout = "cards"
+columns = 2
+
+[pages."memory/"]
+title = "memory"
+description = "knowledge tree — topic-based, wiki-linked, daily notes"
+badge = "core"
+color = "#7ee787"
+tags = ["knowledge", "daily notes"]
+
+[pages."SOUL.md"]
+title = "soul"
+description = "identity, personality, token economy, style rules"
+style = "highlight"
+color = "#f778ba"
 ```
 
-### theme (per folder)
+![same folder with .view.toml — cards, badges, colors, descriptions](screenshots/3-configured.png)
+
+### per-subfolder config
+
+each folder can have its own `.view.toml`. nest configs for different views at different levels:
 
 ```toml
-[theme]
-accent = "#58a6ff"        # accent color
-compact = true            # tighter spacing
+# memory/.view.toml
+[header]
+title = "memory"
+description = "everything maeve knows — organized by topic"
+
+[display]
+sort = "name"
+pinned = ["NOW.md", "_map.md"]
+hidden = ["*.json", "archive/"]
+
+[pages."NOW.md"]
+title = "current priorities"
+style = "highlight"
+description = "what matters right now — max 3 items"
+
+[pages."daily/"]
+description = "daily notes by date"
 ```
 
-### navigation
+![subfolder with its own config — pinned items, descriptions, hidden files](screenshots/4-subfolder.png)
 
-```toml
-[nav]
-expanded = true           # start expanded in sidebar
-hidden = true             # hide from sidebar entirely
-label = "docs"            # override name in sidebar
-separator = "before"      # before | after | both
-position = 1              # manual sidebar ordering
-```
+## full config reference
 
-### per-page config
+### `[display]` — how items are shown
 
-```toml
-[pages."README.md"]
-title = "overview"
-style = "hero"            # highlight | compact | full | raw | hero | aside
-description = "how we read, why we read"
-badge = "new"
-color = "#58a6ff"         # left border color
-tags = ["agents", "memory"]
-order = 1                 # manual sort order
-pinned = true
+| key | values | default | description |
+|-----|--------|---------|-------------|
+| `layout` | `list` `cards` `grid` `table` `timeline` | `list` | layout mode |
+| `columns` | number | `3` | columns for cards/grid |
+| `sort` | `name` `modified` `created` `size` `type` `manual` | `name` | sort order |
+| `order` | `asc` `desc` | `asc` | sort direction |
+| `hidden` | string array | `[]` | glob patterns to hide (`*.json`, `archive/`) |
+| `pinned` | string array | `["_about.md", "README.md"]` | items shown first |
+| `showMeta` | bool | `true` | show file size + modified date |
+| `showPreview` | bool | `false` | show first lines of markdown |
+| `previewLines` | number | `3` | lines to preview |
+| `groupBy` | `type` `ext` `tag` `none` | `none` | group items |
+| `maxDepth` | number | `10` | max recursion depth |
+| `emptyMessage` | string | `"nothing here yet"` | message for empty dirs |
 
-[pages."@ashpreetbedi/"]
-title = "@ashpreetbedi"
-description = "agno founder — 17 articles"
-badge = "17"
-color = "#58a6ff"
-tags = ["agents", "runtime"]
-```
+### `[header]` — folder header
 
-### aliases
+| key | type | description |
+|-----|------|-------------|
+| `title` | string | override folder name |
+| `description` | string | shown below title |
+| `icon` | string | icon before title |
+| `banner` | string | image path for banner |
+
+### `[nav]` — sidebar behavior
+
+| key | type | description |
+|-----|------|-------------|
+| `expanded` | bool | start expanded |
+| `hidden` | bool | hide from sidebar |
+| `label` | string | override sidebar name |
+| `separator` | `before` `after` `both` | visual separator |
+| `position` | number | manual ordering |
+
+### `[pages."filename"]` — per-page config
+
+| key | type | description |
+|-----|------|-------------|
+| `title` | string | display name |
+| `description` | string | shown in listings |
+| `icon` | string | custom icon |
+| `badge` | string | badge text (shown as pill) |
+| `color` | string | hex color for left border |
+| `style` | `highlight` `compact` `full` `raw` `hero` `aside` | display style |
+| `tags` | string array | tag pills |
+| `order` | number | manual sort position |
+| `pinned` | bool | pin to top |
+| `hidden` | bool | hide from listing |
+
+### `[theme]` — visual overrides
+
+| key | type | description |
+|-----|------|-------------|
+| `accent` | string | hex accent color |
+| `compact` | bool | tighter spacing |
+
+### `[aliases]` — url shortcuts
 
 ```toml
 [aliases]
 intro = "README.md"
-faq = "docs/frequently-asked.md"
+faq = "docs/faq.md"
 ```
 
-### virtual pages
+### `[[virtual]]` — pages without files
 
 ```toml
 [[virtual]]
@@ -126,26 +167,29 @@ pinned = true
 
 ## use cases
 
-- browse your openclaw workspace
-- team knowledge base
-- project documentation
-- markdown wiki viewer
-- any folder full of files you want to navigate
+- **openclaw workspaces** — browse your agent's memory, tools, and config
+- **knowledge bases** — team wikis, personal notes, research collections
+- **project docs** — point at any repo, instant documentation site
+- **markdown collections** — articles, recipes, bookmarks, reading lists
 
 ## install
 
 ```bash
-# run directly
+# run directly (recommended)
 bunx tome /path/to/folder
 
-# or install globally
+# install globally
 bun add -g tome
-tome /path/to/folder
+tome .
+
+# or clone and run
+git clone https://github.com/safetnsr/tome
+cd tome && bun install && bun run src/server.ts /path/to/folder
 ```
 
 ## stack
 
-bun + hono + marked. no react, no build step, no complexity.
+bun + hono + marked. no react, no webpack, no build step. ~500 lines of actual code.
 
 ## license
 
