@@ -1,14 +1,14 @@
-# tome
+# lair
 
 turn any folder into a browsable site. built for [openclaw](https://github.com/openclaw/openclaw) agent workspaces.
 
-![tome — zero config, just point at a folder](screenshots/01-default.png)
+![lair — zero config, just point at a folder](screenshots/01-default.png)
 
 ## why
 
-openclaw agents accumulate knowledge: memory files, daily notes, runbooks, tool configs, lessons learned. tome makes that workspace browsable — for you and for the agent.
+openclaw agents accumulate knowledge: memory files, daily notes, runbooks, tool configs, lessons learned. lair makes that workspace browsable — for you and for the agent.
 
-- **zero config** — `npx tome .` and you're done
+- **zero config** — `npx lair .` and you're done
 - **live reload** — file changes appear instantly via websocket
 - **per-folder config** — `.view.toml` to customize any directory
 - **dark mode** — system, light, dark with toggle
@@ -16,9 +16,9 @@ openclaw agents accumulate knowledge: memory files, daily notes, runbooks, tool 
 ## quick start
 
 ```bash
-npx tome .                    # current directory
-npx tome ~/.openclaw/workspace  # agent workspace
-npx tome /var/www/docs        # any folder
+npx lair .                      # current directory
+npx lair ~/.openclaw/workspace  # agent workspace
+npx lair /var/www/docs          # any folder
 ```
 
 ## use cases
@@ -140,8 +140,8 @@ every option is live-editable via the gear icon. changes apply instantly.
 ## development
 
 ```bash
-git clone https://github.com/safetnsr/tome
-cd tome
+git clone https://github.com/safetnsr/lair
+cd lair
 bun install
 
 bun run dev             # frontend on :5173

@@ -14,8 +14,8 @@ const ROOT = resolve(process.argv[2] || ".");
 const PORT = parseInt(process.env.PORT || "3333", 10);
 const STATIC_DIR = resolve(import.meta.dir, "../../dist");
 
-console.log(`[tome] scanning ${ROOT}`);
-console.log(`[tome] http://localhost:${PORT}`);
+console.log(`[lair] scanning ${ROOT}`);
+console.log(`[lair] http://localhost:${PORT}`);
 
 let tree: FileNode[] = [];
 const wsClients = new Set<any>();
@@ -249,4 +249,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`[tome] listening on http://localhost:${server.port}`);
+console.log(`[lair] listening on http://localhost:${server.port}`);

@@ -1,10 +1,10 @@
 {
-  "name": "tome",
-  "version": "0.2.0",
-  "description": "turn any folder into a browsable site. zero config, live, dark mode.",
+  "name": "lair",
+  "version": "0.3.0",
+  "description": "turn any folder into a browsable site. built for openclaw agent workspaces.",
   "type": "module",
   "bin": {
-    "tome": "./bin/tome.js"
+    "lair": "./bin/lair.js"
   },
   "scripts": {
     "dev": "vite",
@@ -47,10 +47,10 @@
     "@radix-ui/react-tabs": "^1.1.0",
     "@radix-ui/react-label": "^2.1.0"
   },
-  "keywords": ["workspace", "viewer", "markdown", "documentation", "browser", "filesystem"],
+  "keywords": ["workspace", "viewer", "markdown", "openclaw", "agent", "browser", "filesystem"],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/safetnsr/tome"
+    "url": "https://github.com/safetnsr/lair"
   }
 }

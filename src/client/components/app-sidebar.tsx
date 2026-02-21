@@ -42,7 +42,7 @@ export function AppSidebar({ tree, currentPath, onNavigate, theme, onThemeChange
                 <BookOpen className="size-4" />
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-semibold">tome</span>
+                <span className="font-semibold">lair</span>
                 <span className="text-xs text-muted-foreground">workspace viewer</span>
               </div>
             </SidebarMenuButton>
