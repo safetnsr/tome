@@ -62,23 +62,127 @@ export function renderBreadcrumbs(path: string): string {
   return html;
 }
 
-export function renderDirectoryListing(nodes: FileNode[], dirPath: string): string {
-  let html = `<div class="directory-listing">`;
-  for (const node of nodes) {
-    const href = node.type === "directory" ? `/page/${node.path}/` : `/page/${node.path}`;
-    const icon = node.meta?.icon || (node.type === "directory" ? "›" : fileIcon(node.ext));
-    const displayName = node.meta?.title || cleanName(node.name);
-    const childCount = node.children?.length || 0;
-    const size = node.type === "file" ? formatSize(node.size) : `${childCount} ${childCount === 1 ? "item" : "items"}`;
-    const modified = timeAgo(node.modified);
+export function renderDirectoryListing(nodes: FileNode[], dirPath: string, config?: any): string {
+  const layout = config?.display?.layout || "list";
+  const showMeta = config?.display?.showMeta !== false;
+  const showPreview = config?.display?.showPreview || false;
+  const columns = config?.display?.columns || 3;
+  const groupBy = config?.display?.groupBy || "none";
 
-    html += `<a href="${href}" class="dir-item${node.meta?.style === 'highlight' ? ' highlight' : ''}">
-      <span class="dir-icon">${icon}</span>
-      <span class="dir-name">${displayName}</span>
-      <span class="dir-meta">${size} · ${modified}</span>
+  // header from config
+  let headerHtml = "";
+  if (config?.header) {
+    const h = config.header;
+    if (h.banner) {
+      headerHtml += `<div class="dir-banner"><img src="/raw/${dirPath ? dirPath + '/' : ''}${h.banner}" alt="" /></div>`;
+    }
+    if (h.title) {
+      headerHtml += `<h1 class="dir-title">${h.icon ? `<span class="dir-title-icon">${h.icon}</span> ` : ""}${h.title}</h1>`;
+    }
+    if (h.description) {
+      headerHtml += `<p class="dir-description">${h.description}</p>`;
+    }
+  }
+
+  // group if needed
+  if (groupBy !== "none") {
+    return headerHtml + renderGroupedListing(nodes, dirPath, layout, groupBy, showMeta, columns);
+  }
+
+  const layoutClass = layout === "cards" ? "cards-layout" : layout === "grid" ? "grid-layout" : "list-layout";
+  const colStyle = (layout === "cards" || layout === "grid") ? ` style="grid-template-columns: repeat(${columns}, 1fr)"` : "";
+  
+  let html = headerHtml + `<div class="directory-listing ${layoutClass}"${colStyle}>`;
+  
+  for (const node of nodes) {
+    html += renderDirItem(node, layout, showMeta, config?.theme);
+  }
+  
+  if (nodes.length === 0) {
+    const msg = config?.display?.emptyMessage || "nothing here yet";
+    html += `<div class="dir-empty">${msg}</div>`;
+  }
+  
+  html += "</div>";
+  return html;
+}
+
+function renderDirItem(node: FileNode, layout: string, showMeta: boolean, theme?: any): string {
+  const href = node.type === "directory" ? `/page/${node.path}/` : `/page/${node.path}`;
+  const icon = node.meta?.icon || (node.type === "directory" ? "›" : fileIcon(node.ext));
+  const displayName = node.meta?.title || cleanName(node.name);
+  const childCount = node.children?.length || 0;
+  const size = node.type === "file" ? formatSize(node.size) : `${childCount} ${childCount === 1 ? "item" : "items"}`;
+  const modified = timeAgo(node.modified);
+  
+  const styleAttr = node.meta?.color ? ` style="border-left: 3px solid ${node.meta.color}"` : "";
+  const classes = [
+    "dir-item",
+    node.meta?.style === "highlight" ? "highlight" : "",
+    node.meta?.style === "hero" ? "hero" : "",
+    layout === "cards" ? "card" : "",
+  ].filter(Boolean).join(" ");
+
+  let badge = "";
+  if (node.meta?.badge) {
+    badge = `<span class="dir-badge">${node.meta.badge}</span>`;
+  }
+
+  let description = "";
+  if (node.meta?.description) {
+    description = `<span class="dir-desc">${node.meta.description}</span>`;
+  }
+
+  let tags = "";
+  if (node.meta?.tags?.length) {
+    tags = `<div class="dir-tags">${node.meta.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div>`;
+  }
+
+  if (layout === "cards") {
+    return `<a href="${href}" class="${classes}"${styleAttr}>
+      <div class="card-header">
+        <span class="dir-icon">${icon}</span>
+        <span class="dir-name">${displayName}</span>
+        ${badge}
+      </div>
+      ${description ? `<div class="card-desc">${node.meta?.description}</div>` : ""}
+      ${tags}
+      ${showMeta ? `<div class="card-meta">${size} · ${modified}</div>` : ""}
     </a>`;
   }
-  html += "</div>";
+
+  return `<a href="${href}" class="${classes}"${styleAttr}>
+    <span class="dir-icon">${icon}</span>
+    <span class="dir-name">${displayName}${badge}</span>
+    ${description ? `<span class="dir-desc">${node.meta?.description}</span>` : ""}
+    ${showMeta ? `<span class="dir-meta">${size} · ${modified}</span>` : ""}
+  </a>`;
+}
+
+function renderGroupedListing(nodes: FileNode[], dirPath: string, layout: string, groupBy: string, showMeta: boolean, columns: number): string {
+  const groups: Record<string, FileNode[]> = {};
+  
+  for (const node of nodes) {
+    let key = "other";
+    if (groupBy === "type") key = node.type === "directory" ? "folders" : "files";
+    else if (groupBy === "ext") key = node.ext || "no extension";
+    else if (groupBy === "tag") key = node.meta?.tags?.[0] || "untagged";
+    
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(node);
+  }
+
+  let html = "";
+  for (const [group, items] of Object.entries(groups)) {
+    html += `<div class="dir-group"><h3 class="dir-group-title">${group}</h3>`;
+    const layoutClass = layout === "cards" ? "cards-layout" : "list-layout";
+    const colStyle = layout === "cards" ? ` style="grid-template-columns: repeat(${columns}, 1fr)"` : "";
+    html += `<div class="directory-listing ${layoutClass}"${colStyle}>`;
+    for (const node of items) {
+      html += renderDirItem(node, layout, showMeta);
+    }
+    html += "</div></div>";
+  }
   return html;
 }
 
@@ -274,6 +378,119 @@ const CSS = `
   .dir-meta { color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
 
   .image-container { text-align: center; }
+
+  /* cards layout */
+  .cards-layout {
+    display: grid;
+    gap: 12px;
+  }
+
+  .dir-item.card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    gap: 8px;
+  }
+  .dir-item.card:hover { border-color: var(--accent); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .card-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    opacity: 0.7;
+    margin-top: auto;
+  }
+
+  /* grid layout */
+  .grid-layout {
+    display: grid;
+    gap: 8px;
+  }
+
+  /* badges */
+  .dir-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+
+  /* tags */
+  .dir-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+  }
+
+  /* descriptions */
+  .dir-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    flex: 1;
+    margin-left: 8px;
+  }
+
+  /* hero style */
+  .dir-item.hero {
+    padding: 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .dir-item.hero .dir-name { font-size: 18px; font-weight: 600; }
+
+  /* directory header */
+  .dir-banner img { width: 100%; border-radius: 12px; margin-bottom: 16px; }
+  .dir-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .dir-title-icon { margin-right: 8px; }
+  .dir-description { color: var(--text-muted); margin-bottom: 24px; font-size: 15px; }
+
+  /* groups */
+  .dir-group { margin-bottom: 24px; }
+  .dir-group-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* empty */
+  .dir-empty {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+  }
 
   /* responsive */
   @media (max-width: 768px) {

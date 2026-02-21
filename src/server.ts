@@ -5,6 +5,7 @@ import {
   scanDirectory,
   readFileContent,
   findLandingPage,
+  loadViewConfig,
   type FileNode,
 } from "./scanner.js";
 import { renderContent } from "./renderer.js";
@@ -33,8 +34,8 @@ async function refresh() {
 
 await refresh();
 
-// auto-refresh every 2 seconds (lightweight — just stat calls)
-setInterval(refresh, 2000);
+// auto-refresh every 10 seconds
+setInterval(refresh, 10000);
 
 // --- App ---
 
@@ -44,9 +45,18 @@ const app = new Hono();
 app.get("/", async (c) => {
   await refresh();
   const landing = findLandingPage(tree);
+  const rootConfig = await loadViewConfig(ROOT);
+  const hasCustomLayout = rootConfig?.display?.layout && rootConfig.display.layout !== "list";
   let content = "";
 
-  if (landing) {
+  if (hasCustomLayout) {
+    const listingNodes = tree.filter(n => n.name !== landing?.name);
+    content = renderDirectoryListing(listingNodes, "", rootConfig);
+    if (landing) {
+      const text = await readFileContent(landing);
+      content += "<hr />" + renderContent(text, landing);
+    }
+  } else if (landing) {
     const text = await readFileContent(landing);
     content = renderContent(text, landing);
     content += "<hr />" + renderDirectoryListing(tree, "");
@@ -55,7 +65,8 @@ app.get("/", async (c) => {
   }
 
   const nav = renderNav(tree, "");
-  return c.html(htmlPage("home", nav, content, renderBreadcrumbs("")));
+  const title = rootConfig?.header?.title || "home";
+  return c.html(htmlPage(title, nav, content, renderBreadcrumbs("")));
 });
 
 // Raw file serving (for images, downloads)
@@ -89,17 +100,27 @@ app.get("/page/*", async (c) => {
   if (node.type === "directory") {
     const children = node.children || [];
     const landing = findLandingPage(children);
+    const dirConfig = await loadViewConfig(node.absolutePath);
+    const hasCustomLayout = dirConfig?.display?.layout && dirConfig.display.layout !== "list";
     let content = "";
 
-    if (landing) {
+    if (hasCustomLayout) {
+      // custom layout takes priority — show listing first, landing content below
+      const listingNodes = children.filter(n => n.name !== landing?.name);
+      content = renderDirectoryListing(listingNodes, pagePath, dirConfig);
+      if (landing) {
+        const text = await readFileContent(landing);
+        content += "<hr />" + renderContent(text, landing);
+      }
+    } else if (landing) {
       const text = await readFileContent(landing);
       content = renderContent(text, landing);
-      content += "<hr />" + renderDirectoryListing(children, pagePath);
+      content += "<hr />" + renderDirectoryListing(children, pagePath, dirConfig);
     } else {
-      content = renderDirectoryListing(children, pagePath);
+      content = renderDirectoryListing(children, pagePath, dirConfig);
     }
 
-    const title = node.meta?.title || node.name;
+    const title = dirConfig?.header?.title || node.meta?.title || node.name;
     return c.html(htmlPage(title, nav, content, breadcrumbs));
   }
 
