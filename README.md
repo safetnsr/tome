@@ -15,19 +15,44 @@
 
 ## install
 
+### standalone
+
 ```bash
-npx @openclaw/lair ~/workspace
+npx @safetnsr/lair ~/workspace
 ```
 
 or install globally:
 
 ```bash
-npm i -g @openclaw/lair
+npm i -g @safetnsr/lair
 lair ~/workspace
 lair .
 ```
 
 open `http://localhost:3333`. that's it.
+
+### openclaw plugin
+
+install lair as an openclaw gateway plugin — it auto-starts with the gateway and serves your agent's workspace:
+
+```bash
+openclaw plugins install @safetnsr/lair
+```
+
+lair will start on port 3333 serving `~/.openclaw/workspace`. configure in your openclaw config:
+
+```json
+{
+  "plugins": {
+    "lair": {
+      "port": 3333,
+      "workspace": "/path/to/your/workspace"
+    }
+  }
+}
+```
+
+ask your agent `lair_open` to get the url.
 
 ## zero config
 

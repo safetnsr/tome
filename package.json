@@ -1,15 +1,19 @@
 {
-  "name": "@openclaw/lair",
+  "name": "@safetnsr/lair",
   "version": "0.3.0",
   "description": "turn any folder into a browsable workspace. built for openclaw agent workspaces.",
   "type": "module",
   "bin": {
     "lair": "./bin/lair.js"
   },
+  "openclaw": {
+    "extensions": ["./server/plugin.js"]
+  },
   "files": [
     "bin/",
     "server/",
     "dist/",
+    "openclaw.plugin.json",
     "README.md",
     "LICENSE"
   ],

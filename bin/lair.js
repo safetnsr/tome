@@ -5,8 +5,9 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// pass the target directory to the server
 const target = process.argv[2] || ".";
-process.argv[2] = resolve(target);
+const root = resolve(target);
+const port = parseInt(process.env.PORT || "3333", 10);
 
-await import("../server/index.js");
+const { startLair } = await import("../server/index.js");
+await startLair({ root, port });
