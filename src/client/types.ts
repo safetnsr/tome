@@ -7,6 +7,9 @@ export interface FileNode {
   modified: string
   meta?: PageMeta
   children?: FileNode[]
+  embedHtml?: string        // rendered HTML for embedded files
+  isPinned?: boolean        // pinned via [pin] config
+  statusBadge?: "fresh" | "stale" | null  // freshness badge
 }
 
 export interface PageMeta {
@@ -20,6 +23,12 @@ export interface PageMeta {
   badge?: string
   color?: string
   tags?: string[]
+}
+
+export interface LinkItem {
+  title: string
+  url: string
+  icon?: string
 }
 
 export interface ViewConfig {
@@ -61,6 +70,24 @@ export interface ViewConfig {
   }
   pages?: Record<string, PageMeta>
   aliases?: Record<string, string>
+  // New features
+  pin?: {
+    files?: string[]
+  }
+  filter?: {
+    hide?: string[]
+    only?: string[]
+  }
+  links?: LinkItem[]
+  status?: {
+    fresh?: string
+    stale?: string
+  }
+  embed?: {
+    files?: string[]
+    maxLines?: number
+    collapsed?: boolean
+  }
 }
 
 export interface ContentResponse {

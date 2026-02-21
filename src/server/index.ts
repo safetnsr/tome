@@ -6,9 +6,12 @@ import {
   readFileContent,
   findLandingPage,
   loadViewConfig,
+  applyFilter,
+  applyPin,
+  applyStatusBadges,
   type FileNode,
 } from "./scanner.js";
-import { renderContent } from "./renderer.js";
+import { renderContent, renderMarkdown } from "./renderer.js";
 
 const ROOT = resolve(process.argv[2] || ".");
 const PORT = parseInt(process.env.PORT || "3333", 10);
@@ -67,12 +70,14 @@ app.get("/api/content/*", async (c) => {
       const text = await readFileContent(landing);
       html = renderContent(text, landing);
     }
+    // Apply new features to root children
+    const processedChildren = await processDirectoryNodes(tree, rootConfig, ROOT);
     return c.json({
       type: "directory",
       path: "",
       config: rootConfig,
       landingHtml: html,
-      children: serializeTree(tree),
+      children: serializeTree(processedChildren),
     });
   }
 
@@ -88,12 +93,14 @@ app.get("/api/content/*", async (c) => {
       const text = await readFileContent(landing);
       landingHtml = renderContent(text, landing);
     }
+    // Apply new features to directory children
+    const processedChildren = await processDirectoryNodes(children, dirConfig, node.absolutePath);
     return c.json({
       type: "directory",
       path: pagePath,
       config: dirConfig,
       landingHtml,
-      children: serializeTree(children),
+      children: serializeTree(processedChildren),
     });
   }
 
@@ -198,6 +205,48 @@ app.get("*", async (c) => {
   return c.text("not found - run `bun run build` first", 404);
 });
 
+// --- Feature processors ---
+
+/**
+ * Process directory nodes applying all new features:
+ * filter → pin → status → embed
+ */
+async function processDirectoryNodes(
+  nodes: FileNode[],
+  config: any,
+  dirPath: string
+): Promise<FileNode[]> {
+  // 1. Apply filter (hide/only)
+  let processed = applyFilter(nodes, config);
+
+  // 2. Apply pin (mark + sort to top)
+  processed = applyPin(processed, config);
+
+  // 3. Apply status badges
+  processed = applyStatusBadges(processed, config);
+
+  // 4. Apply embed (load HTML content for embedded files)
+  if (config?.embed?.files && config.embed.files.length > 0) {
+    const embedSet = new Set(config.embed.files as string[]);
+    processed = await Promise.all(
+      processed.map(async (node) => {
+        if (node.type === "file" && embedSet.has(node.name)) {
+          try {
+            const text = await readFileContent(node);
+            const html = renderMarkdown(text);
+            return { ...node, embedHtml: html };
+          } catch {
+            return node;
+          }
+        }
+        return node;
+      })
+    );
+  }
+
+  return processed;
+}
+
 // --- Helpers ---
 
 function serializeTree(nodes: FileNode[]): any[] {
@@ -210,6 +259,9 @@ function serializeTree(nodes: FileNode[]): any[] {
     modified: n.modified,
     meta: n.meta,
     children: n.children ? serializeTree(n.children) : undefined,
+    embedHtml: n.embedHtml,
+    isPinned: n.isPinned,
+    statusBadge: n.statusBadge,
   }));
 }
 

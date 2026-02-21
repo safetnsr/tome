@@ -14,6 +14,9 @@ export interface FileNode {
   modified: Date;
   children?: FileNode[];
   meta?: PageMeta;
+  embedHtml?: string;        // rendered HTML for embedded files
+  isPinned?: boolean;        // pinned via [pin] config
+  statusBadge?: "fresh" | "stale" | null;  // freshness badge
 }
 
 export interface PageMeta {
@@ -30,6 +33,12 @@ export interface PageMeta {
   cover?: string;       // image path for cards layout
   redirect?: string;    // redirect to another path
   tags?: string[];
+}
+
+export interface LinkItem {
+  title: string;
+  url: string;
+  icon?: string;
 }
 
 export interface ViewConfig {
@@ -72,6 +81,24 @@ export interface ViewConfig {
   pages?: Record<string, PageMeta>;
   aliases?: Record<string, string>;  // url aliases: "intro" → "README.md"
   virtual?: VirtualPage[];  // pages that don't exist on disk
+  // New features
+  pin?: {
+    files?: string[];
+  };
+  filter?: {
+    hide?: string[];
+    only?: string[];
+  };
+  links?: LinkItem[];
+  status?: {
+    fresh?: string;   // e.g. "24h"
+    stale?: string;   // e.g. "7d"
+  };
+  embed?: {
+    files?: string[];
+    maxLines?: number;
+    collapsed?: boolean;
+  };
 }
 
 export interface VirtualPage {
@@ -102,6 +129,41 @@ const FILE_TYPE_MAP: Record<string, string> = {
   ".gif": "image", ".webp": "image", ".svg": "image",
   ".txt": "text", ".log": "text", ".csv": "text",
 };
+
+// --- Duration parsing ---
+
+export function parseDuration(duration: string): number {
+  // Returns milliseconds
+  const match = duration.match(/^(\d+(?:\.\d+)?)(h|d|m|w)$/i);
+  if (!match) return 0;
+  const value = parseFloat(match[1]);
+  const unit = match[2].toLowerCase();
+  const multipliers: Record<string, number> = {
+    h: 3600 * 1000,
+    d: 86400 * 1000,
+    w: 7 * 86400 * 1000,
+    m: 30 * 86400 * 1000,
+  };
+  return value * (multipliers[unit] || 0);
+}
+
+function computeStatusBadge(
+  modified: Date,
+  statusConfig: ViewConfig["status"]
+): "fresh" | "stale" | null {
+  if (!statusConfig) return null;
+  const now = Date.now();
+  const age = now - modified.getTime();
+  if (statusConfig.fresh) {
+    const freshMs = parseDuration(statusConfig.fresh);
+    if (freshMs > 0 && age <= freshMs) return "fresh";
+  }
+  if (statusConfig.stale) {
+    const staleMs = parseDuration(statusConfig.stale);
+    if (staleMs > 0 && age >= staleMs) return "stale";
+  }
+  return null;
+}
 
 // --- Scanner ---
 
@@ -179,7 +241,10 @@ export async function scanDirectory(
     }
   }
 
-  return sortNodes(nodes, viewConfig);
+  // Apply [filter] config (hide/only) — also affects sidebar
+  const filteredNodes = applyFilter(nodes, viewConfig);
+
+  return sortNodes(filteredNodes, viewConfig);
 }
 
 export async function readFileContent(node: FileNode): Promise<string> {
@@ -222,10 +287,84 @@ function isHidden(name: string, config: ViewConfig | null): boolean {
   return false;
 }
 
-function matchGlob(name: string, glob: string): boolean {
+/**
+ * Filter nodes per [filter] config:
+ * - hide: exclude by name or extension
+ * - only: if set, only include files matching these extensions (directories always pass)
+ */
+export function applyFilter(nodes: FileNode[], config: ViewConfig | null): FileNode[] {
+  if (!config?.filter) return nodes;
+  const { hide, only } = config.filter;
+  return nodes.filter((node) => {
+    // Apply hide patterns
+    if (hide && hide.length > 0) {
+      for (const pattern of hide) {
+        if (matchFilterPattern(node.name, pattern)) return false;
+      }
+    }
+    // Apply only filter (only for files, directories always pass)
+    if (only && only.length > 0 && node.type === "file") {
+      const matches = only.some((pattern) => matchFilterPattern(node.name, pattern));
+      if (!matches) return false;
+    }
+    return true;
+  });
+}
+
+function matchFilterPattern(name: string, pattern: string): boolean {
+  // Extension match: ".md" matches any file ending in .md
+  if (pattern.startsWith(".") && !pattern.includes("/")) {
+    return name.endsWith(pattern);
+  }
+  // Glob: *.md
+  if (pattern.startsWith("*.")) {
+    return name.endsWith(pattern.slice(1));
+  }
+  // Directory match: pattern ending in /
+  if (pattern.endsWith("/")) {
+    return name === pattern.replace(/\/$/, "");
+  }
+  // Exact match
+  return name === pattern;
+}
+
+export function matchGlob(name: string, glob: string): boolean {
   if (glob.startsWith("*.")) return name.endsWith(glob.slice(1));
   if (glob.endsWith("/")) return name === glob.replace(/\/$/, "");
   return name === glob;
+}
+
+/**
+ * Apply pin config: mark nodes as isPinned and sort them to top
+ */
+export function applyPin(nodes: FileNode[], config: ViewConfig | null): FileNode[] {
+  const pinFiles = new Set(config?.pin?.files || []);
+  if (pinFiles.size === 0) return nodes;
+
+  // Mark pinned nodes
+  const withPinned = nodes.map((node) => ({
+    ...node,
+    isPinned: pinFiles.has(node.name) ? true : node.isPinned,
+  }));
+
+  // Stable sort: pinned first, rest unchanged
+  const pinned = withPinned.filter((n) => n.isPinned);
+  const rest = withPinned.filter((n) => !n.isPinned);
+  return [...pinned, ...rest];
+}
+
+/**
+ * Apply status badges based on file modification time
+ */
+export function applyStatusBadges(nodes: FileNode[], config: ViewConfig | null): FileNode[] {
+  if (!config?.status) return nodes;
+  return nodes.map((node) => ({
+    ...node,
+    statusBadge: node.type === "file" ? computeStatusBadge(
+      typeof node.modified === "string" ? new Date(node.modified) : node.modified,
+      config.status
+    ) : null,
+  }));
 }
 
 function sortNodes(nodes: FileNode[], config: ViewConfig | null): FileNode[] {
